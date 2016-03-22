@@ -88,7 +88,7 @@ function all(fileName) {
     return sec/60/60/24;
   }
 
-  d3.csv(("../data/bos311_subdata/" + fileName), function(error, data) {
+  d3.csv(("https://github.com/aaldilai/BostonUrbanData/blob/master/data/bos311_subdata/" + fileName), function(error, data) {
     if (error) throw error;
 
     var barTypes = ['projected', 'actual'];
