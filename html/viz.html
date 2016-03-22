@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+svg {
+  border-style: solid;
+  boder-width: 1px;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: steelblue;
+}
+
+.x.axis path {
+  display: none;
+}
+
+</style>
+<body>
+  <select id="category">
+    <option value="abandoned_bicycle.csv">Abandoned Bicycle</option>
+    <option value="Breathe_easy.csv">Breathe Easy</option>
+    <option value="Building_inspection.csv">Building Inspection</option>
+    <option value="CE_collection.csv">CE collection</option>
+    <option value="Chronic_Dampness_Mold.csv">Chronic Dampessness</option>
+    <option value="Cross_metering.csv">Cross Metering</option>
+    <option value="Equipment_repair.csv">Equipment Repair</option>
+    <option value="Exceeding_permit.csv">Exceeding Terms of Permit</option>
+    <option value="pothole.csv">Pot holes</option>
+  </select>
+  <button id='submit'> Submit</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.16/d3.min.js"></script>
+<script src="https://code.jquery.com/jquery-2.2.2.min.js" integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI=" crossorigin="anonymous"></script>
+<script>
+
+$(document).ready(function() {
+  all("abandoned_bicycle.csv");
+});
+
+$("button#submit").click(function() {
+  $("svg").remove();
+  all($("select#category").val());
+});
+
+function all(fileName) {
+  var margin = {top: 50, right: 20, bottom: 130, left: 40},
+      width = 960 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+
+  var x0 = d3.scale.ordinal()
+      .rangeRoundBands([0, width], .5);
+
+  var x1 = d3.scale.ordinal();
+
+  var y = d3.scale.linear()
+      .range([height, 0]);
+
+  var color = d3.scale.ordinal()
+      .range(["#98abc5", "#a05d56", "#d0743c", "#ff8c00", "#8a89a6", "#7b6888", "#6b486b"]);
+
+  var xAxis = d3.svg.axis()
+      .scale(x0)
+      .orient("bottom");
+
+  var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left");
+      // .tickFormat(d3.format(".1s"));
+
+  var svg = d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  function sToD(sec) {
+    return sec/60/60/24;
+  }
+
+  d3.csv(("../data/bos311_subdata/" + fileName), function(error, data) {
+    if (error) throw error;
+
+    var barTypes = ['projected', 'actual'];
+
+    var neighborhoodNames = data.map(function(d) { return d.neighborhood; });
+
+    data.forEach(function(d) {
+      d.times = barTypes.map(function(name) { return {name: name, value: +sToD(d[name])}; });
+    });
+
+
+    x0.domain(neighborhoodNames);
+    x1.domain(barTypes).rangeRoundBands([0, x0.rangeBand()]);
+    y.domain([0, sToD(d3.max(data, function(d) { return (parseInt(d.projected) > parseInt(d.actual)) ? parseInt(d.projected) : parseInt(d.actual);}))]);
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + (height) + ")")
+        .call(xAxis)
+      .selectAll("text")
+        .attr("y", 0)
+        .attr("x", 9)
+        .attr("dy", ".35em")
+        .attr("transform", "rotate(90)")
+        .style("text-anchor", "start");
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Days");
+
+    var neighborhood = svg.selectAll(".neighborhood")
+        .data(data)
+      .enter().append("g")
+        .attr("class", "neighborhood")
+        .attr("transform", function(d) { return "translate(" + x0(d.neighborhood) + ",0)"; });
+
+    neighborhood.selectAll("rect")
+        .data(function(d) { return d.times; })
+      .enter().append("rect")
+        .attr("width", x1.rangeBand())
+        .attr("x", function(d) { return x1(d.name); })
+        .attr("y", function(d) { return y(d.value); })
+        .attr("height", function(d) { return height - y(d.value); })
+        .style("fill", function(d) { return color(d.name); });
+
+    var legend = svg.selectAll(".legend")
+        .data(barTypes.slice().reverse())
+      .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", width - 18)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", color);
+
+    legend.append("text")
+        .attr("x", width - 24)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+        .text(function(d) { return d; });
+  });
+}
+</script>
+</body>
