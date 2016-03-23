@@ -1,0 +1,55 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+
+<body>
+
+<h1>Machine Learning</h1>
+
+<p>We tested whether machine learning can be used to predict the neighborhood that a service request occurs in based on the category of request and the predicted and actual response time. We hypothesized that longer predicted and actual response times are predictors of a service request being located in low-income neighborhoods and heavily industrial neighborhoods (rather than mostly residential or commercial neighborhoods). </p>
+
+<p>In order to test this hypothesis, we first isolated the service requests that we were interested in. We only looked at closed service requests, since open ones do not have actual response times to report. We also excluded requests that were closed due to the request being invalid, since we wanted to test how long it takes city officials to actually assign and remedy a problem. </p>
+
+<p>We also selected a subset of request types that we were interested in. Some categories were selected because they are very frequent overall (e.g. Pick Up Dead Animal), some were selected because they occur in all or nearly all neighborhoods (e.g. Chronic Dampness), and some fulfill both metrics (e.g. Pothole Repair). Graffiti was included because it has high frequency (although not the highest) and also because we hypothesized that its frequency per neighborhood is correlated with neighbothood median income. </p>
+
+<p>Each request type category was classified separately in order to avoid over-fragmenting the data by vectorizing the many categories in the dataset. We used naive bayes, SVM, and logistic regression techniques to classify the data. The data were randomly split in half to create training and testing groups. </p>
+
+<p>First, we used predicted response time and actual response time as features and neighborhoods as labels. The results are below:</p>
+
+<h2>SVM</h2>
+<table>
+	<tr><td>Request category</td><td>Training mean accuracy</td><td>K-cross validation mean accuracy</td><td>Standard deviation</td><td>Number of folds</td><td>Test mean accuracy</td></tr>
+	<tr><td>Chronic Dampness/Mold</td><td>0.128</td><td>0.0652</td><td>0.0464</td><td>3</td><td>0.176</td></tr>
+	<tr><td>Pothole Repair</td><td>0.0437</td><td>0.0850</td><td>0.0356</td><td>10</td><td>0.0509</td></tr>
+	<tr><td>Pick Up Dead Animal</td><td>0.00795</td><td>0.150</td><td>0.0524</td><td>2</td><td>0.102</td></tr>
+	<tr><td>Graffiti Removal</td><td>0.0362</td><td>0.0270</td><td>0.0277</td><td>7</td><td>0.00434</td></tr>
+</table>
+<p> Note: the number of folds was limited by the number of ocurrences of each neighborhood within the dataset for the specified request category. </p>
+
+<h2>Naive Bayes</h2>
+<table>
+	<tr><td>Request category</td><td>Training mean accuracy</td><td>K-cross validation mean accuracy</td><td>Standard deviation</td><td>Number of folds</td><td>Test mean accuracy</td></tr>
+	<tr><td>Chronic Dampness/Mold</td><td>0.0300</td><td>0.0300</td><td>0.00380</td><td>3</td><td>0.00543</td></tr>
+	<tr><td>Pothole Repair</td><td>0.0117</td><td>0.0117</td><td>0.000193</td><td>10</td><td>0.00749</td></tr>
+	<tr><td>Pick Up Dead Animal</td><td>0.00754</td><td>0.00754</td><td>0.000202</td><td>2</td><td>0.00183</td></tr>
+	<tr><td>Graffiti Removal</td><td>0.00154</td><td>0.00154</td><td>0.000305</td><td>7</td><td>0.00222</td></tr>
+</table>
+<h2>Logistic Regression</h2>
+<table>
+	<tr><td>Request category</td><td>Training mean accuracy</td><td>K-cross validation mean accuracy</td><td>Standard deviation</td><td>Number of folds</td><td>Test mean accuracy</td></tr>
+	<tr><td>Chronic Dampness/Mold</td><td>0.196</td><td>0.196</td><td>0.00733</td><td>3</td><td></td>0.190</tr>
+	<tr><td>Pothole Repair</td><td>0.115</td><td>0.107</td><td>0.0244</td><td>10</td><td>0.109</td></tr>
+	<tr><td>Pick Up Dead Animal</td><td>0.203</td><td> 0.203</td><td>0.000653</td><td>2</td><td>0.202</td></tr>
+	<tr><td>Graffiti Removal</td><td>0.135</td><td>0.135</td><td>0.000346</td><td>7</td><td>0.0214</td></tr>
+</table>
+<h2>Conclusions</h2>
+<p>Unfortunately, the machine learning results are inconclusive. This is due to a number of issues with the design of the trials. </p>
+First, there are too many neighborhoods to be used as labels, so the features are not getting conclusive predictions. This is especially important considering how small and compact Boston's urban core is. Moving foreward, we will experiment with different spatial scales (e.g. census tracts or utility districts) in order to separate the spatial categories more. </p>
+<p>Relatedly, there are also not enough features included in the dataset. We only used predicted and actual response time, which was not enough to partition the data into the many neighborhoods that we used as labels. We need to add additional dimensions. One option is to use all of the request categories instead of building separate classifiers for each. Unfortunately we will need to vectorize the categories in order to do that, which will explode the size of the data file and the runtime of the classifications script because there are 700,000 rows in the dataset and 128 categories. However, this strategy would allow us to increase the number of cross-validation folds because each neighborhood would be better represented in the data.</p>
+<p>The final challenge has to do with the data itself. For a given category, most of the predicted response times are very similar. This indicataes that the department responsible for the task uses a default response time. This dramatically reduces the usefulness of the predicted response time as a predictor of neighborhood. We will need to take this into account when we come up with our larger list of features. Instead of the predicted response time, we may include the actual response time as a percentage of the predicted response time as a feature.</p>
+<p>In summary, we are not ready to state any conclusions about whether the location of a service request (at any scale) can be predicted using the predicted or actual response time for the request.</p>
+
+
+</body>
+</html>
